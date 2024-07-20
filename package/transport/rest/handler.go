@@ -1,9 +1,13 @@
 package rest
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"strconv"
 	"test-server/package/instances"
 	"test-server/package/mockDB"
 )
@@ -44,4 +48,29 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, db mockDB.Moc
 	} else {
 		http.Error(writer, "Invalid HTTP verb.", http.StatusBadRequest)
 	}
+}
+
+func ShowFriends(writer http.ResponseWriter, request *http.Request, db mockDB.MockDB) {
+	vars := mux.Vars(request)
+
+	id := vars["id"]
+
+	IntId, err := strconv.Atoi(id)
+
+	if err != nil {
+		log.Println("invalid syntax of id", err)
+		http.Error(writer, "invalid syntax of id", http.StatusBadRequest)
+	}
+
+	user, err2 := db.ShowAllFriendsOfUser(IntId)
+	if err2 != nil {
+		log.Println(err2)
+		http.Error(writer, "not found friends of this user", http.StatusNotFound)
+		return
+	}
+	buf := &bytes.Buffer{}
+	gob.NewDecoder(buf).Decode(user)
+
+	writer.Write(buf.Bytes())
+
 }

@@ -1,10 +1,10 @@
 package utils
 
-import "test-server/package/mockDB"
+import "test-server/package/instances"
 
-func FindIndexOfUserById(list mockDB.MockDB, id int) int {
+func FindIndexOfUserById(list []instances.User, id int) int {
 
-	for i, user := range list.List {
+	for i, user := range list {
 		if id == user.Id {
 			return i
 		}
