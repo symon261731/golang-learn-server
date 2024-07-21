@@ -13,3 +13,16 @@ func FindIndexOfUserById(list []instances.User, id int) int {
 	return -1
 
 }
+
+func FilterFriendsOfUser(listOfUser []instances.FriendsOfUser, filterById int) []instances.FriendsOfUser {
+	var filteredSliceOfFriends []instances.FriendsOfUser
+	for _, userFriend := range listOfUser {
+
+		if userFriend.Id != filterById {
+			filteredSliceOfFriends = append(filteredSliceOfFriends, userFriend)
+		}
+
+	}
+
+	return filteredSliceOfFriends
+}

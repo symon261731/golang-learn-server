@@ -26,6 +26,9 @@ func main() {
 	r.HandleFunc("/friends/{id}", func(writer http.ResponseWriter, request *http.Request) {
 		rest.ShowFriends(writer, request, fakeDb)
 	})
+	r.HandleFunc("/user", func(writer http.ResponseWriter, request *http.Request) {
+		rest.DeleteUserById(writer, request, fakeDb)
+	})
 
 	log.Printf("Веб-сервер запущен на http://127.0.0.1%s", PORT)
 	err := http.ListenAndServe(PORT, r)

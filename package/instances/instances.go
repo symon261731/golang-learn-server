@@ -5,9 +5,14 @@ type CreateUserFormData struct {
 	Age  int
 }
 
+type FriendsOfUser struct {
+	Id   int
+	Name string
+}
+
 type User struct {
 	Id      int
 	Name    string
 	Age     int
-	Friends []string
+	Friends []FriendsOfUser
 }
