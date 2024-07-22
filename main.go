@@ -17,17 +17,20 @@ func main() {
 	var fakeDb mockDB.MockDB
 
 	r.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		rest.GetAllUsers(fakeDb.List)
+		rest.GetAllUsers(&fakeDb.List)
 	})
 	r.HandleFunc("/create", func(writer http.ResponseWriter, request *http.Request) {
-		rest.CreateUser(writer, request, fakeDb)
+		rest.CreateUser(writer, request, &fakeDb)
 		fmt.Println(fakeDb.List)
 	})
 	r.HandleFunc("/friends/{id}", func(writer http.ResponseWriter, request *http.Request) {
-		rest.ShowFriends(writer, request, fakeDb)
+		rest.ShowFriends(writer, request, &fakeDb)
 	})
 	r.HandleFunc("/user", func(writer http.ResponseWriter, request *http.Request) {
-		rest.DeleteUserById(writer, request, fakeDb)
+		rest.DeleteUserById(writer, request, &fakeDb)
+	})
+	r.HandleFunc("/make_friends", func(writer http.ResponseWriter, request *http.Request) {
+		rest.MakeFriends(writer, request, &fakeDb)
 	})
 
 	log.Printf("Веб-сервер запущен на http://127.0.0.1%s", PORT)

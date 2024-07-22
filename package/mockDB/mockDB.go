@@ -2,6 +2,8 @@ package mockDB
 
 import (
 	"errors"
+	"log"
+	"strconv"
 	"test-server/package/instances"
 	"test-server/package/utils"
 )
@@ -14,8 +16,27 @@ func (db *MockDB) AddNewUser(newUser instances.User) {
 	db.List = append(db.List, newUser)
 }
 
-func (db *MockDB) MakeNewFriend(sendingUserId int, receivingUserId int) {
+func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) error {
+	intSendingUserId, formatToIntErr := strconv.Atoi(sendingUserId)
+	if formatToIntErr != nil {
+		return formatToIntErr
+	}
+	intReceivingUser, formatToIntErr2 := strconv.Atoi(receivingUserId)
+	if formatToIntErr2 != nil {
+		return formatToIntErr2
+	}
 
+	indexOfSendingUser := utils.FindIndexOfUserById(db.List, intSendingUserId)
+	indexOfReceivingUser := utils.FindIndexOfUserById(db.List, intReceivingUser)
+
+	sendingUser := db.List[indexOfSendingUser]
+	receivingUser := db.List[indexOfReceivingUser]
+
+	db.List[indexOfSendingUser].Friends = append(db.List[indexOfSendingUser].Friends, instances.FriendsOfUser{Id: receivingUser.Id, Name: receivingUser.Name})
+	db.List[indexOfReceivingUser].Friends = append(db.List[indexOfReceivingUser].Friends, instances.FriendsOfUser{Id: sendingUser.Id, Name: sendingUser.Name})
+	log.Println(db.List)
+
+	return nil
 }
 
 func (db *MockDB) DeleteUser(userId int) {
@@ -37,7 +58,6 @@ func (db *MockDB) DeleteUser(userId int) {
 }
 func (db *MockDB) ShowAllFriendsOfUser(userId int) ([]instances.FriendsOfUser, error) {
 	indexOfNeededUser := utils.FindIndexOfUserById(db.List, userId)
-
 	if indexOfNeededUser == -1 {
 		return []instances.FriendsOfUser{}, errors.New("not found friends by this id")
 	}

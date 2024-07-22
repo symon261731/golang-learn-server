@@ -16,3 +16,8 @@ type User struct {
 	Age     int
 	Friends []FriendsOfUser
 }
+
+type PostIdsFriends struct {
+	Source_id string
+	Target_id string
+}
