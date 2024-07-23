@@ -21,3 +21,7 @@ type PostIdsFriends struct {
 	Source_id string
 	Target_id string
 }
+
+type PutNewAgeJson struct {
+	NewAge string `json:"new age"`
+}

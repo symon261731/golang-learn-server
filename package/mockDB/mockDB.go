@@ -34,7 +34,6 @@ func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) er
 
 	db.List[indexOfSendingUser].Friends = append(db.List[indexOfSendingUser].Friends, instances.FriendsOfUser{Id: receivingUser.Id, Name: receivingUser.Name})
 	db.List[indexOfReceivingUser].Friends = append(db.List[indexOfReceivingUser].Friends, instances.FriendsOfUser{Id: sendingUser.Id, Name: sendingUser.Name})
-	log.Println(db.List)
 
 	return nil
 }
@@ -65,6 +64,14 @@ func (db *MockDB) ShowAllFriendsOfUser(userId int) ([]instances.FriendsOfUser, e
 	return db.List[indexOfNeededUser].Friends, nil
 }
 
-func (db *MockDB) ChangeAgeOfUser(userId int, newAge int) {
+func (db *MockDB) ChangeAgeOfUser(userId int, newAge int) error {
+	indexOfNeededUser := utils.FindIndexOfUserById(db.List, userId)
+	if indexOfNeededUser == -1 {
+		return errors.New("not found user")
+	}
 
+	db.List[indexOfNeededUser].Age = newAge
+
+	log.Println("user age changed", db.List[indexOfNeededUser].Name, db.List[indexOfNeededUser].Age)
+	return nil
 }

@@ -73,10 +73,11 @@ func ShowFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 
 	log.Println(friends)
 	buf := &bytes.Buffer{}
+	// не могу отправить данные обратно на клиент
 	err3 := gob.NewDecoder(buf).Decode(&friends)
 	if err3 != nil {
 		http.Error(writer, "invalid syntax of id", http.StatusInternalServerError)
-		log.Println(err)
+		log.Println(err3)
 		return
 	}
 
@@ -114,6 +115,7 @@ func DeleteUserById(writer http.ResponseWriter, request *http.Request, db *mockD
 	writer.Write(buf.Bytes())
 }
 
+// MakeFriends эндпоинт для связывания двух пользователей
 func MakeFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.MockDB) {
 	if request.Method != "POST" {
 		http.Error(writer, "invalid request", http.StatusNotFound)
@@ -134,6 +136,48 @@ func MakeFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 	if err != nil {
 		log.Println("error", err)
 		http.Error(writer, "error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func ChangeAgeOfUser(writer http.ResponseWriter, request *http.Request, db *mockDB.MockDB) {
+	if request.Method != "PUT" {
+		http.Error(writer, "invalid request", http.StatusNotFound)
+		return
+	}
+	vars := mux.Vars(request)
+
+	id := vars["user_id"]
+
+	intUserId, errFormatId := strconv.Atoi(id)
+
+	if errFormatId != nil {
+		log.Println("invalid syntax of dynamic url", errFormatId)
+		http.Error(writer, "invalid syntax of user_id", http.StatusBadRequest)
+		return
+	}
+
+	var jsonData instances.PutNewAgeJson
+	err := json.NewDecoder(request.Body).Decode(&jsonData)
+
+	if err != nil {
+		log.Println("invalid DTO", err)
+		http.Error(writer, "invalid DTO", http.StatusBadRequest)
+		return
+	}
+
+	intNewAge, errFormatAge := strconv.Atoi(jsonData.NewAge)
+
+	if errFormatAge != nil {
+		log.Println("invalid syntax of newAge", errFormatAge)
+		http.Error(writer, "invalid syntax of `new age`", http.StatusBadRequest)
+		return
+	}
+
+	err = db.ChangeAgeOfUser(intUserId, intNewAge)
+
+	if err != nil {
+		http.Error(writer, "server error", http.StatusInternalServerError)
 		return
 	}
 

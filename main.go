@@ -32,6 +32,9 @@ func main() {
 	r.HandleFunc("/make_friends", func(writer http.ResponseWriter, request *http.Request) {
 		rest.MakeFriends(writer, request, &fakeDb)
 	})
+	r.HandleFunc("/{user_id}", func(writer http.ResponseWriter, request *http.Request) {
+		rest.ChangeAgeOfUser(writer, request, &fakeDb)
+	})
 
 	log.Printf("Веб-сервер запущен на http://127.0.0.1%s", PORT)
 	err := http.ListenAndServe(PORT, r)
