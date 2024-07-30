@@ -42,7 +42,14 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, db *mockDB.Mo
 
 	db.AddNewUser(newUser)
 
+	jData, _ := json.Marshal(newUser.Id)
+
 	log.Println("New user created", newUser)
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusCreated)
+	writer.Write(jData)
+
 }
 
 // ShowFriends эндпоинт для показа друзей пользователя

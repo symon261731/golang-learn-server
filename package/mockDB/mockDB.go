@@ -14,6 +14,7 @@ type MockDB struct {
 
 func (db *MockDB) AddNewUser(newUser instances.User) {
 	db.List = append(db.List, newUser)
+
 }
 
 func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) error {
