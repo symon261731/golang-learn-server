@@ -33,6 +33,16 @@ func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) er
 	sendingUser := db.List[indexOfSendingUser]
 	receivingUser := db.List[indexOfReceivingUser]
 
+	if utils.CheckUserInFriendList(sendingUser.Friends, receivingUser.Id) {
+		var err = errors.New("this user is friend already")
+		return err
+	}
+
+	if utils.CheckUserInFriendList(receivingUser.Friends, sendingUser.Id) {
+		var err = errors.New("this user is friend already")
+		return err
+	}
+
 	db.List[indexOfSendingUser].Friends = append(db.List[indexOfSendingUser].Friends, instances.FriendsOfUser{Id: receivingUser.Id, Name: receivingUser.Name})
 	db.List[indexOfReceivingUser].Friends = append(db.List[indexOfReceivingUser].Friends, instances.FriendsOfUser{Id: sendingUser.Id, Name: sendingUser.Name})
 

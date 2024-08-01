@@ -26,3 +26,14 @@ func FilterFriendsOfUser(listOfUser []instances.FriendsOfUser, filterById int) [
 
 	return filteredSliceOfFriends
 }
+
+func CheckUserInFriendList(listOfUser []instances.FriendsOfUser, findId int) bool {
+
+	for _, user := range listOfUser {
+		if user.Id == findId {
+			return true
+		}
+	}
+
+	return false
+}
