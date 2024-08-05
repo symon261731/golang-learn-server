@@ -84,7 +84,7 @@ func ShowFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 	err3 := gob.NewDecoder(buf).Decode(&friends)
 	if err3 != nil {
 		http.Error(writer, "invalid syntax of id", http.StatusInternalServerError)
-		log.Println(err3)
+		log.Println("error", err3)
 		return
 	}
 
@@ -138,13 +138,25 @@ func MakeFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 		return
 	}
 
-	err = db.MakeNewFriend(jsonData.Source_id, jsonData.Target_id)
+	resultString, err := db.MakeNewFriend(jsonData.Source_id, jsonData.Target_id)
 
 	if err != nil {
 		log.Println("error", err)
 		http.Error(writer, "error", http.StatusInternalServerError)
 		return
 	}
+
+	log.Println(resultString)
+
+	buf := &bytes.Buffer{}
+	err2 := gob.NewDecoder(buf).Decode(&resultString)
+	if err2 != nil {
+		log.Println("error", err2)
+		http.Error(writer, "error by server", http.StatusInternalServerError)
+		return
+	}
+	writer.Write(buf.Bytes())
+
 }
 
 func ChangeAgeOfUser(writer http.ResponseWriter, request *http.Request, db *mockDB.MockDB) {

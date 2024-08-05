@@ -2,6 +2,7 @@ package mockDB
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"test-server/package/instances"
@@ -17,14 +18,14 @@ func (db *MockDB) AddNewUser(newUser instances.User) {
 
 }
 
-func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) error {
+func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) (string, error) {
 	intSendingUserId, formatToIntErr := strconv.Atoi(sendingUserId)
 	if formatToIntErr != nil {
-		return formatToIntErr
+		return "", formatToIntErr
 	}
 	intReceivingUser, formatToIntErr2 := strconv.Atoi(receivingUserId)
 	if formatToIntErr2 != nil {
-		return formatToIntErr2
+		return "", formatToIntErr2
 	}
 
 	indexOfSendingUser := utils.FindIndexOfUserById(db.List, intSendingUserId)
@@ -35,18 +36,20 @@ func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) er
 
 	if utils.CheckUserInFriendList(sendingUser.Friends, receivingUser.Id) {
 		var err = errors.New("this user is friend already")
-		return err
+		return "", err
 	}
 
 	if utils.CheckUserInFriendList(receivingUser.Friends, sendingUser.Id) {
 		var err = errors.New("this user is friend already")
-		return err
+		return "", err
 	}
 
 	db.List[indexOfSendingUser].Friends = append(db.List[indexOfSendingUser].Friends, instances.FriendsOfUser{Id: receivingUser.Id, Name: receivingUser.Name})
 	db.List[indexOfReceivingUser].Friends = append(db.List[indexOfReceivingUser].Friends, instances.FriendsOfUser{Id: sendingUser.Id, Name: sendingUser.Name})
 
-	return nil
+	resultString := fmt.Sprintf("user %s and %s started to be a friend", db.List[indexOfSendingUser].Name, db.List[indexOfReceivingUser].Name)
+
+	return resultString, nil
 }
 
 func (db *MockDB) DeleteUser(userId int) {
