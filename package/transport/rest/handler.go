@@ -42,7 +42,13 @@ func CreateUser(writer http.ResponseWriter, request *http.Request, db *mockDB.Mo
 
 	db.AddNewUser(newUser)
 
-	jData, _ := json.Marshal(newUser.Id)
+	jData, errJson := json.Marshal(newUser.Id)
+
+	if errJson != nil {
+		log.Println(errJson)
+		http.Error(writer, "server error", http.StatusInternalServerError)
+		return
+	}
 
 	log.Println("New user created", newUser)
 
@@ -79,16 +85,16 @@ func ShowFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 	}
 
 	log.Println(friends)
-	buf := &bytes.Buffer{}
-	// не могу отправить данные обратно на клиент
-	err3 := gob.NewDecoder(buf).Decode(&friends)
-	if err3 != nil {
-		http.Error(writer, "invalid syntax of id", http.StatusInternalServerError)
-		log.Println("error", err3)
+	data, errJson := json.Marshal(friends)
+
+	if errJson != nil {
+		log.Println(errJson)
+		http.Error(writer, "not found friends of this user", http.StatusInternalServerError)
 		return
 	}
 
-	writer.Write(buf.Bytes())
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(data)
 }
 
 // DeleteUserById эндпоинт для удаления пользователя по id
@@ -148,15 +154,16 @@ func MakeFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 
 	log.Println(resultString)
 
-	buf := &bytes.Buffer{}
-	err2 := gob.NewDecoder(buf).Decode(&resultString)
-	if err2 != nil {
-		log.Println("error", err2)
+	data, jsonErr := json.Marshal(resultString)
+
+	if jsonErr != nil {
+		log.Println("error", jsonErr)
 		http.Error(writer, "error by server", http.StatusInternalServerError)
 		return
 	}
-	writer.Write(buf.Bytes())
 
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(data)
 }
 
 func ChangeAgeOfUser(writer http.ResponseWriter, request *http.Request, db *mockDB.MockDB) {
