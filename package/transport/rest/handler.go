@@ -1,9 +1,8 @@
 package rest
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -12,9 +11,11 @@ import (
 	"test-server/package/mockDB"
 )
 
-func GetAllUsers(Users *[]instances.User) {
+func GetAllUsers(Users map[int]*instances.User) {
 	log.Println("List of users")
-	log.Println(Users)
+	for _, user := range Users {
+		log.Println(*user)
+	}
 }
 
 // CreateUser эндпоинт для создания пользователя
@@ -80,7 +81,7 @@ func ShowFriends(writer http.ResponseWriter, request *http.Request, db *mockDB.M
 
 	if err2 != nil {
 		log.Println(err2, id)
-		http.Error(writer, "not found friends of this user", http.StatusNotFound)
+		http.Error(writer, err2.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -114,18 +115,22 @@ func DeleteUserById(writer http.ResponseWriter, request *http.Request, db *mockD
 		return
 	}
 
-	db.DeleteUser(1)
+	nameOfDeleteUser, errByDelete := db.DeleteUser(IntId)
 
-	buf := &bytes.Buffer{}
-	successResponseText := "user delete success"
-	err2 := gob.NewDecoder(buf).Decode(&successResponseText)
-	if err2 != nil {
-		log.Println("error", err2)
-		http.Error(writer, "error by server", http.StatusInternalServerError)
+	if errByDelete != nil {
+		http.Error(writer, fmt.Sprintf("not found user with id %s", id), http.StatusBadRequest)
 		return
 	}
 
-	writer.Write(buf.Bytes())
+	data, errJson := json.Marshal(fmt.Sprintf("user %s delete success", nameOfDeleteUser))
+	if errJson != nil {
+		log.Println(errJson)
+		http.Error(writer, "not found friends of this user", http.StatusInternalServerError)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(data)
 }
 
 // MakeFriends эндпоинт для связывания двух пользователей
@@ -200,11 +205,21 @@ func ChangeAgeOfUser(writer http.ResponseWriter, request *http.Request, db *mock
 		return
 	}
 
-	err = db.ChangeAgeOfUser(intUserId, intNewAge)
+	successMessage, errChangeAge := db.ChangeAgeOfUser(intUserId, intNewAge)
 
-	if err != nil {
+	if errChangeAge != nil {
 		http.Error(writer, "server error", http.StatusInternalServerError)
 		return
 	}
 
+	data, jsonErr := json.Marshal(successMessage)
+
+	if jsonErr != nil {
+		log.Println("error", jsonErr)
+		http.Error(writer, "error by server", http.StatusInternalServerError)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(data)
 }

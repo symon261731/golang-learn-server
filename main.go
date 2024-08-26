@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"test-server/package/instances"
 	"test-server/package/mockDB"
 	"test-server/package/transport/rest"
 )
@@ -14,10 +15,12 @@ var PORT = ":4000"
 func main() {
 	r := mux.NewRouter()
 
-	var fakeDb mockDB.MockDB
+	var fakeDb = mockDB.MockDB{
+		List: map[int]*instances.User{},
+	}
 
 	r.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		rest.GetAllUsers(&fakeDb.List)
+		rest.GetAllUsers(fakeDb.List)
 	})
 	r.HandleFunc("/create", func(writer http.ResponseWriter, request *http.Request) {
 		rest.CreateUser(writer, request, &fakeDb)

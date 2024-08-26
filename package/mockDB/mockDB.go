@@ -10,12 +10,11 @@ import (
 )
 
 type MockDB struct {
-	List []instances.User
+	List map[int]*instances.User
 }
 
 func (db *MockDB) AddNewUser(newUser instances.User) {
-	db.List = append(db.List, newUser)
-
+	db.List[newUser.Id] = &newUser
 }
 
 func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) (string, error) {
@@ -28,11 +27,8 @@ func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) (s
 		return "", formatToIntErr2
 	}
 
-	indexOfSendingUser := utils.FindIndexOfUserById(db.List, intSendingUserId)
-	indexOfReceivingUser := utils.FindIndexOfUserById(db.List, intReceivingUser)
-
-	sendingUser := db.List[indexOfSendingUser]
-	receivingUser := db.List[indexOfReceivingUser]
+	sendingUser := db.List[intSendingUserId]
+	receivingUser := db.List[intReceivingUser]
 
 	if utils.CheckUserInFriendList(sendingUser.Friends, receivingUser.Id) {
 		var err = errors.New("this user is friend already")
@@ -44,48 +40,56 @@ func (db *MockDB) MakeNewFriend(sendingUserId string, receivingUserId string) (s
 		return "", err
 	}
 
-	db.List[indexOfSendingUser].Friends = append(db.List[indexOfSendingUser].Friends, instances.FriendsOfUser{Id: receivingUser.Id, Name: receivingUser.Name})
-	db.List[indexOfReceivingUser].Friends = append(db.List[indexOfReceivingUser].Friends, instances.FriendsOfUser{Id: sendingUser.Id, Name: sendingUser.Name})
+	db.List[intSendingUserId].Friends = append(db.List[intSendingUserId].Friends, instances.FriendsOfUser{Id: receivingUser.Id, Name: receivingUser.Name})
+	db.List[intReceivingUser].Friends = append(db.List[intReceivingUser].Friends, instances.FriendsOfUser{Id: sendingUser.Id, Name: sendingUser.Name})
 
-	resultString := fmt.Sprintf("user %s and %s started to be a friend", db.List[indexOfSendingUser].Name, db.List[indexOfReceivingUser].Name)
+	resultString := fmt.Sprintf("user %s and %s starts be a friends", db.List[intSendingUserId].Name, db.List[intReceivingUser].Name)
 
 	return resultString, nil
 }
 
-func (db *MockDB) DeleteUser(userId int) {
-	var newUserList []instances.User
+func (db *MockDB) DeleteUser(userId int) (string, error) {
 
-	for _, user := range db.List {
-		if user.Id == userId {
-			continue
+	neededUser := db.List[userId]
+
+	if neededUser != nil {
+		for _, friend := range neededUser.Friends {
+			var newListOfFriend = utils.FilterFriendsOfUser(db.List[friend.Id].Friends, neededUser.Id)
+
+			db.List[friend.Id].Friends = newListOfFriend
 		}
 
-		filteredUserList := utils.FilterFriendsOfUser(user.Friends, userId)
-		user.Friends = filteredUserList
-		newUserList = append(newUserList, user)
+		nameOfUser := neededUser.Name
+		log.Println(neededUser.Id, neededUser.Name, "deleteSucess")
+		delete(db.List, userId)
+
+		return nameOfUser, nil
 	}
 
-	// Вот тут кажется достачный хардкод, но и тут вроде ДБ по хроошему должна быть
-	db.List = newUserList
-
+	return "", errors.New("пользователя с таким id не существует")
 }
+
 func (db *MockDB) ShowAllFriendsOfUser(userId int) ([]instances.FriendsOfUser, error) {
-	indexOfNeededUser := utils.FindIndexOfUserById(db.List, userId)
-	if indexOfNeededUser == -1 {
-		return []instances.FriendsOfUser{}, errors.New("not found friends by this id")
+
+	neededUser := db.List[userId]
+
+	if neededUser != nil {
+		return neededUser.Friends, nil
 	}
 
-	return db.List[indexOfNeededUser].Friends, nil
+	return []instances.FriendsOfUser{}, errors.New(fmt.Sprintf("пользователя с таким id не существует"))
+
 }
 
-func (db *MockDB) ChangeAgeOfUser(userId int, newAge int) error {
-	indexOfNeededUser := utils.FindIndexOfUserById(db.List, userId)
-	if indexOfNeededUser == -1 {
-		return errors.New("not found user")
+func (db *MockDB) ChangeAgeOfUser(userId int, newAge int) (string, error) {
+
+	neededUser := db.List[userId]
+
+	if neededUser != nil {
+		log.Println("user age changed", db.List[userId].Name, db.List[userId].Age)
+		neededUser.Age = newAge
+		return "возраст пользователя успешно обновлен", nil
 	}
 
-	db.List[indexOfNeededUser].Age = newAge
-
-	log.Println("user age changed", db.List[indexOfNeededUser].Name, db.List[indexOfNeededUser].Age)
-	return nil
+	return "", errors.New("пользователь не найден")
 }
